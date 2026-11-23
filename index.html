@@ -1,11 +1,11 @@
 <!doctype html>
-<html lang="en">
+<html lang="pl">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
 <meta name="referrer" content="no-referrer">
-<title>Family Secret Santa</title>
+<title>Secret Santa</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎁</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -173,58 +173,82 @@
   @media (prefers-reduced-motion: reduce) {
     .gift.shake, .result { animation: none; }
   }
+
+  /* Language switcher + per-person language badge */
+  .topbar { display: flex; justify-content: flex-end; margin: -16px 0 12px; }
+  .lang-switch {
+    display: inline-flex; border: 1px solid var(--line); border-radius: 999px;
+    background: var(--card); padding: 3px; gap: 2px;
+  }
+  .lang-switch button {
+    background: transparent; color: var(--muted); border: 0; border-radius: 999px;
+    padding: 4px 12px; font-size: 13px; font-weight: 600; letter-spacing: .04em;
+  }
+  .lang-switch button[aria-pressed="true"] { background: var(--green); color: var(--card); }
+  .badge {
+    display: inline-block; font-size: 11px; font-weight: 600; letter-spacing: .05em;
+    border: 1px solid var(--line); color: var(--muted); border-radius: 6px;
+    padding: 0 5px; margin-left: 6px; vertical-align: 1px;
+  }
 </style>
 </head>
 <body>
 <main>
 
+  <div class="topbar">
+    <div class="lang-switch" role="group" aria-label="Język / Language / Langue">
+      <button type="button" data-lang="pl">PL</button>
+      <button type="button" data-lang="en">EN</button>
+      <button type="button" data-lang="fr">FR</button>
+    </div>
+  </div>
+
   <!-- ============ 1. ORGANIZER: SETUP ============ -->
   <section id="setup" hidden>
     <header>
-      <div class="eyebrow">🎄 Secret Santa</div>
-      <h1>Draw names for the family</h1>
-      <p class="lede">Everyone gets their own private link. The draw is never shown to anyone, including you, and isn't saved anywhere.</p>
+      <div class="eyebrow" data-i18n="setupEyebrow"></div>
+      <h1 data-i18n="setupTitle"></h1>
+      <p class="lede" data-i18n="setupLede"></p>
     </header>
 
-    <div id="fileWarning" class="notice" hidden>
-      This page is open from a file on your computer, so the links it creates will only work on this computer.
-      Host it first (for example on GitHub Pages; see the README) and open it from that web address.
-    </div>
+    <div id="fileWarning" class="notice" data-i18n="fileWarning" hidden></div>
 
     <form id="setupForm" class="card" novalidate>
       <div class="field">
-        <label for="people">Who's taking part?</label>
-        <p class="hint">One line per person. Put couples on the <b>same line</b>, separated by <b>&amp;</b> or a comma, and they won't draw each other. Nobody ever draws themselves.</p>
-        <textarea id="people" spellcheck="false" placeholder="Anna &amp; Tom&#10;Kasia, Piotr&#10;Grandma Ela&#10;Uncle Marek &amp; Aunt Basia&#10;Ola"></textarea>
+        <label for="people" data-i18n="peopleLabel"></label>
+        <p class="hint" data-i18n-html="peopleHint"></p>
+        <textarea id="people" spellcheck="false"></textarea>
         <div id="chips" class="chips" aria-live="polite"></div>
       </div>
 
       <div class="field">
         <details>
-          <summary>Add details to everyone's message (optional)</summary>
+          <summary data-i18n="detailsSummary"></summary>
           <div class="field">
-            <label for="eventName">Title</label>
+            <label for="eventName" data-i18n="titleLabel"></label>
+            <p class="hint" data-i18n="titleHint"></p>
             <input type="text" id="eventName" maxlength="80">
           </div>
           <div class="row field">
             <div>
-              <label for="budget">Budget</label>
-              <input type="text" id="budget" maxlength="40" placeholder="e.g. around 100 zł">
+              <label for="budget" data-i18n="budget"></label>
+              <input type="text" id="budget" maxlength="40" data-i18n-ph="budgetPh">
             </div>
             <div>
-              <label for="when">Gift exchange</label>
-              <input type="text" id="when" maxlength="60" placeholder="e.g. Christmas Eve at Grandma's">
+              <label for="when" data-i18n="when"></label>
+              <input type="text" id="when" maxlength="60" data-i18n-ph="whenPh">
             </div>
           </div>
           <div class="field">
-            <label for="note">Note</label>
-            <input type="text" id="note" maxlength="200" placeholder="e.g. Wrap it nicely and add a riddle!">
+            <label for="note" data-i18n="note"></label>
+            <input type="text" id="note" maxlength="200" data-i18n-ph="notePh">
           </div>
+          <p class="hint" style="margin-top:12px" data-i18n="detailsHint"></p>
         </details>
       </div>
 
       <div class="field">
-        <button type="submit" class="primary">🎲 Draw names</button>
+        <button type="submit" class="primary" data-i18n="drawBtn"></button>
         <p id="setupError" class="error" role="alert"></p>
       </div>
     </form>
@@ -233,22 +257,20 @@
   <!-- ============ 2. ORGANIZER: LINKS ============ -->
   <section id="links" hidden>
     <header>
-      <div class="eyebrow">✅ Names drawn</div>
-      <h1>Send everyone their link</h1>
-      <p class="lede">Each link shows its owner who they're buying for, and nothing else. Send each one privately, by text, WhatsApp, Messenger or email.</p>
+      <div class="eyebrow" data-i18n="linksEyebrow"></div>
+      <h1 data-i18n="linksTitle"></h1>
+      <p class="lede" data-i18n="linksLede"></p>
     </header>
 
-    <div class="notice">
-      <b>Don't open the links yourself.</b> A link shows its owner's draw to whoever opens it. Keep this page open until you've sent them all. If you close or reload it, the links are gone and you'll need to draw again.
-    </div>
+    <div class="notice" data-i18n-html="linksNotice"></div>
 
     <div class="card">
       <h2 id="linksTitle"></h2>
       <p class="hint" id="linksSub"></p>
       <ul class="people" id="peopleList"></ul>
       <div class="actions-bar">
-        <button type="button" class="secondary small" id="copyAll">Copy all links (name + link)</button>
-        <button type="button" class="secondary small" id="startOver">Start over</button>
+        <button type="button" class="secondary small" id="copyAll" data-i18n="copyAll"></button>
+        <button type="button" class="secondary small" id="startOver" data-i18n="startOver"></button>
       </div>
       <p id="copyStatus" class="hint" aria-live="polite" style="margin-top:10px"></p>
     </div>
@@ -257,23 +279,23 @@
   <!-- ============ 3. PARTICIPANT: REVEAL ============ -->
   <section id="reveal" hidden>
     <div class="card reveal">
-      <div class="eyebrow" id="revealEvent">Secret Santa</div>
+      <div class="eyebrow" id="revealEvent"></div>
 
       <div id="revealIntro">
         <div class="gift" id="gift" aria-hidden="true">🎁</div>
         <h1 id="revealHello"></h1>
         <p class="lede" id="revealCheck"></p>
         <div style="margin-top:24px">
-          <button type="button" class="primary" id="revealBtn">Reveal who I'm buying for</button>
+          <button type="button" class="primary" id="revealBtn" data-i18n="revealBtn"></button>
         </div>
       </div>
 
       <div id="revealResult" class="result" hidden>
-        <p class="lede" style="margin-top:0">You are Secret Santa for…</p>
+        <p class="lede" style="margin-top:0" data-i18n="youAre"></p>
         <div class="big-name" id="recipient"></div>
-        <p>🤫 Keep it secret!</p>
+        <p data-i18n="keepSecret"></p>
         <div class="details" id="details"></div>
-        <p class="fine">You can open this link again any time. Please don't forward it to anyone.</p>
+        <p class="fine" data-i18n="revealFine"></p>
       </div>
     </div>
   </section>
@@ -281,12 +303,12 @@
   <section id="broken" hidden>
     <div class="card reveal">
       <div class="gift" aria-hidden="true">🧦</div>
-      <h1>This link doesn't work</h1>
-      <p class="lede">It may have been cut off when it was copied. Ask the organizer to send it again.</p>
+      <h1 data-i18n="brokenTitle"></h1>
+      <p class="lede" data-i18n="brokenLede"></p>
     </div>
   </section>
 
-  <footer>No accounts, no server, nothing stored. Each draw travels only inside its own link.</footer>
+  <footer data-i18n="footer"></footer>
 </main>
 
 <script>
@@ -295,6 +317,195 @@
 
   const $ = (id) => document.getElementById(id);
   const VERSION = "1";
+
+  /* ------------------------------------------------------------------ *
+   * Translations
+   * ------------------------------------------------------------------ */
+  const LANGS = ["pl", "en", "fr"];
+  const DEFAULT_LANG = "pl";
+
+  const I18N = {
+    pl: {
+      setupEyebrow: "🎄 Mikołajki",
+      setupTitle: "Losowanie dla całej rodziny",
+      setupLede: "Każdy dostanie własny, prywatny link. Wyniku losowania nie zobaczy nikt, także Ty, i nie jest on nigdzie zapisywany.",
+      fileWarning: "Ta strona jest otwarta z pliku na Twoim komputerze, więc utworzone linki zadziałają tylko na tym komputerze. Najpierw opublikuj ją w internecie (np. na GitHub Pages, zobacz README) i otwórz z tego adresu.",
+      peopleLabel: "Kto bierze udział?",
+      peopleHint: "Jedna osoba w linii. Pary wpisz w <b>tej samej linii</b>, oddzielone <b>&amp;</b> lub przecinkiem, a nie wylosują siebie nawzajem. Nikt nie wylosuje samego siebie.<br>Wiadomości są domyślnie <b>po polsku</b>. Jeśli ktoś woli inny język, dopisz <b>(EN)</b> lub <b>(FR)</b> po jego imieniu.",
+      peoplePh: "Anna & Tom (EN)\nKasia, Piotr\nBabcia Ela\nMarek (FR) & Basia\nOla",
+      detailsSummary: "Dodaj szczegóły do wiadomości (opcjonalnie)",
+      titleLabel: "Tytuł",
+      titleHint: "Zostaw puste, a każdy zobaczy domyślny tytuł w swoim języku.",
+      budget: "Budżet",
+      budgetPh: "np. ok. 100 zł",
+      when: "Wymiana prezentów",
+      whenPh: "np. Wigilia u Babci",
+      note: "Notatka",
+      notePh: "np. Ładnie zapakuj i dołącz zagadkę!",
+      detailsHint: "Te pola pokażą się wszystkim dokładnie tak, jak je wpiszesz.",
+      drawBtn: "🎲 Losuj",
+      errMin: "Potrzeba co najmniej 3 osób.",
+      errDup: (n) => `„${n}” występuje dwa razy. Dodaj nazwisko lub inicjał, żeby każde imię było inne.`,
+      errLong: "Jedno z imion jest bardzo długie. Czy nie brakuje gdzieś nowej linii?",
+      errImpossible: "Nie da się przeprowadzić losowania: w jednej linii jest więcej niż połowa wszystkich osób. Dodaj więcej osób albo podziel tę linię.",
+      errLang: (code, n) => `Nieznany język „${code}” przy imieniu ${n}. Użyj PL, EN lub FR.`,
+      linksEyebrow: "✅ Losowanie gotowe",
+      linksTitle: "Wyślij każdemu jego link",
+      linksLede: "Każdy link pokazuje swojemu właścicielowi, komu kupuje prezent, i nic więcej. Wyślij każdy prywatnie: SMS-em, przez WhatsApp, Messengera lub e-mailem.",
+      linksNotice: "<b>Nie otwieraj tych linków samodzielnie.</b> Link pokazuje wynik losowania każdemu, kto go otworzy. Nie zamykaj tej strony, dopóki nie wyślesz wszystkich. Po zamknięciu lub odświeżeniu linki przepadną i trzeba będzie losować od nowa.",
+      linksSub: (n) => `Liczba osób: ${n}. Kliknij „Kopiuj link” lub „Udostępnij” przy imieniu i wyślij ten link tylko tej osobie.`,
+      copyLink: "Kopiuj link",
+      share: "Udostępnij…",
+      copied: "✓ skopiowano",
+      shared: "✓ udostępniono",
+      copiedFlash: (n) => `Skopiowano link dla: ${n}. Wklej go w prywatnej wiadomości do tej osoby.`,
+      copyAll: "Kopiuj wszystkie linki (imię + link)",
+      copyAllFlash: "Skopiowano wszystkie imiona z linkami. Każdej osobie wyślij tylko jej własną linię.",
+      startOver: "Zacznij od nowa",
+      confirmStartOver: "Zacząć od nowa i losować ponownie?\n\nJeśli jakieś linki zostały już wysłane, poproś wszystkich, by je zignorowali. Stare linki nadal pokazują stare losowanie.",
+      copyPrompt: "Skopiuj to:",
+      footer: "Bez kont, bez serwera, nic nie jest zapisywane. Każdy wynik jest tylko w swoim własnym linku.",
+      // Participant-facing
+      defaultTitle: (y) => `Rodzinne Mikołajki ${y}`,
+      shareText: (n) => `Cześć, ${n}! 🎅 Oto Twój prywatny link do losowania Mikołajek. Otwórz go, żeby zobaczyć, komu kupujesz prezent:`,
+      hello: (n) => `Cześć, ${n}! 🎅`,
+      check: (n) => `Ten link jest tylko dla: ${n}. Jeśli to nie Ty, zamknij go bez podglądania.`,
+      revealBtn: "Pokaż, komu kupuję prezent",
+      youAre: "Jesteś Mikołajem dla…",
+      keepSecret: "🤫 Zachowaj to w tajemnicy!",
+      revealFine: "Możesz otworzyć ten link ponownie w dowolnym momencie. Nie przekazuj go nikomu.",
+      brokenTitle: "Ten link nie działa",
+      brokenLede: "Mógł zostać ucięty podczas kopiowania. Poproś organizatora o ponowne wysłanie.",
+    },
+
+    en: {
+      setupEyebrow: "🎄 Secret Santa",
+      setupTitle: "Draw names for the family",
+      setupLede: "Everyone gets their own private link. The draw is never shown to anyone, including you, and isn't saved anywhere.",
+      fileWarning: "This page is open from a file on your computer, so the links it creates will only work on this computer. Host it first (for example on GitHub Pages; see the README) and open it from that web address.",
+      peopleLabel: "Who's taking part?",
+      peopleHint: "One line per person. Put couples on the <b>same line</b>, separated by <b>&amp;</b> or a comma, and they won't draw each other. Nobody ever draws themselves.<br>Messages are in <b>Polish</b> by default. For someone who prefers another language, add <b>(EN)</b> or <b>(FR)</b> after their name.",
+      peoplePh: "Anna & Tom (EN)\nKasia, Piotr\nGrandma Ela\nMarek (FR) & Basia\nOla",
+      detailsSummary: "Add details to everyone's message (optional)",
+      titleLabel: "Title",
+      titleHint: "Leave it empty and everyone sees a default title in their own language.",
+      budget: "Budget",
+      budgetPh: "e.g. around 100 zł",
+      when: "Gift exchange",
+      whenPh: "e.g. Christmas Eve at Grandma's",
+      note: "Note",
+      notePh: "e.g. Wrap it nicely and add a riddle!",
+      detailsHint: "Everyone sees these fields exactly as you type them.",
+      drawBtn: "🎲 Draw names",
+      errMin: "You need at least 3 people.",
+      errDup: (n) => `"${n}" appears twice. Add a surname or initial so every name is different.`,
+      errLong: "One of the names is very long. Did a line break go missing?",
+      errImpossible: "There's no valid draw: one line has more than half of all the people. Add more people or split that line.",
+      errLang: (code, n) => `Unknown language "${code}" next to ${n}. Use PL, EN or FR.`,
+      linksEyebrow: "✅ Names drawn",
+      linksTitle: "Send everyone their link",
+      linksLede: "Each link shows its owner who they're buying for, and nothing else. Send each one privately, by text, WhatsApp, Messenger or email.",
+      linksNotice: "<b>Don't open the links yourself.</b> A link shows its owner's draw to whoever opens it. Keep this page open until you've sent them all. If you close or reload it, the links are gone and you'll need to draw again.",
+      linksSub: (n) => `${n} people. Tap "Copy link" or "Share" next to each name and send that link to that person only.`,
+      copyLink: "Copy link",
+      share: "Share…",
+      copied: "✓ copied",
+      shared: "✓ shared",
+      copiedFlash: (n) => `Copied ${n}'s link. Paste it in a private message to ${n}.`,
+      copyAll: "Copy all links (name + link)",
+      copyAllFlash: "Copied every name with its link. Send each person only their own line.",
+      startOver: "Start over",
+      confirmStartOver: "Start over and draw again?\n\nIf you've already sent some links, tell everyone to ignore them. Old links keep showing the old draw.",
+      copyPrompt: "Copy this:",
+      footer: "No accounts, no server, nothing stored. Each draw travels only inside its own link.",
+      defaultTitle: (y) => `Family Secret Santa ${y}`,
+      shareText: (n) => `Hi ${n}! 🎅 Here's your private Secret Santa link. Open it to see who you're buying for:`,
+      hello: (n) => `Hi ${n}! 🎅`,
+      check: (n) => `This link is just for ${n}. If you're not ${n}, please close it without peeking.`,
+      revealBtn: "Reveal who I'm buying for",
+      youAre: "You are Secret Santa for…",
+      keepSecret: "🤫 Keep it secret!",
+      revealFine: "You can open this link again any time. Please don't forward it to anyone.",
+      brokenTitle: "This link doesn't work",
+      brokenLede: "It may have been cut off when it was copied. Ask the organizer to send it again.",
+    },
+
+    fr: {
+      setupEyebrow: "🎄 Père Noël secret",
+      setupTitle: "Le tirage au sort de la famille",
+      setupLede: "Chacun reçoit son propre lien privé. Le résultat du tirage n'est montré à personne, pas même à vous, et n'est enregistré nulle part.",
+      fileWarning: "Cette page est ouverte depuis un fichier sur votre ordinateur : les liens créés ne fonctionneront que sur cet ordinateur. Publiez-la d'abord en ligne (par exemple sur GitHub Pages, voir le README) et ouvrez-la depuis cette adresse.",
+      peopleLabel: "Qui participe ?",
+      peopleHint: "Une personne par ligne. Mettez les couples sur la <b>même ligne</b>, séparés par <b>&amp;</b> ou une virgule : ils ne se tireront pas l'un l'autre. Personne ne se tire soi-même.<br>Les messages sont en <b>polonais</b> par défaut. Pour une personne qui préfère une autre langue, ajoutez <b>(EN)</b> ou <b>(FR)</b> après son prénom.",
+      peoplePh: "Anna & Tom (EN)\nKasia, Piotr\nMamie Ela\nMarek (FR) & Basia\nOla",
+      detailsSummary: "Ajouter des détails au message (facultatif)",
+      titleLabel: "Titre",
+      titleHint: "Laissez vide : chacun verra un titre par défaut dans sa langue.",
+      budget: "Budget",
+      budgetPh: "ex. environ 25 €",
+      when: "Échange des cadeaux",
+      whenPh: "ex. le réveillon chez Mamie",
+      note: "Remarque",
+      notePh: "ex. Emballez-le joliment et ajoutez une devinette !",
+      detailsHint: "Tout le monde verra ces champs exactement tels que vous les écrivez.",
+      drawBtn: "🎲 Lancer le tirage",
+      errMin: "Il faut au moins 3 personnes.",
+      errDup: (n) => `« ${n} » apparaît deux fois. Ajoutez un nom ou une initiale pour que chaque prénom soit différent.`,
+      errLong: "Un des prénoms est très long. Un retour à la ligne aurait-il disparu ?",
+      errImpossible: "Aucun tirage possible : une ligne contient plus de la moitié des participants. Ajoutez des personnes ou séparez cette ligne.",
+      errLang: (code, n) => `Langue inconnue « ${code} » pour ${n}. Utilisez PL, EN ou FR.`,
+      linksEyebrow: "✅ Tirage effectué",
+      linksTitle: "Envoyez à chacun son lien",
+      linksLede: "Chaque lien montre à son destinataire à qui il offre un cadeau, et rien d'autre. Envoyez-les en privé : par SMS, WhatsApp, Messenger ou e-mail.",
+      linksNotice: "<b>N'ouvrez pas ces liens vous-même.</b> Un lien révèle le tirage à quiconque l'ouvre. Gardez cette page ouverte jusqu'à ce que vous les ayez tous envoyés. Si vous la fermez ou la rechargez, les liens sont perdus et il faudra refaire le tirage.",
+      linksSub: (n) => `${n} personnes. Appuyez sur « Copier le lien » ou « Partager » à côté de chaque prénom et envoyez ce lien à cette personne uniquement.`,
+      copyLink: "Copier le lien",
+      share: "Partager…",
+      copied: "✓ copié",
+      shared: "✓ partagé",
+      copiedFlash: (n) => `Lien de ${n} copié. Collez-le dans un message privé à ${n}.`,
+      copyAll: "Copier tous les liens (prénom + lien)",
+      copyAllFlash: "Tous les prénoms et liens sont copiés. N'envoyez à chacun que sa propre ligne.",
+      startOver: "Recommencer",
+      confirmStartOver: "Recommencer et refaire le tirage ?\n\nSi vous avez déjà envoyé des liens, dites à tout le monde de les ignorer. Les anciens liens affichent toujours l'ancien tirage.",
+      copyPrompt: "Copiez ceci :",
+      footer: "Pas de compte, pas de serveur, rien n'est enregistré. Chaque tirage voyage uniquement dans son propre lien.",
+      defaultTitle: (y) => `Père Noël secret en famille ${y}`,
+      shareText: (n) => `Salut ${n} ! 🎅 Voici ton lien privé pour le Père Noël secret. Ouvre-le pour découvrir à qui tu offres un cadeau :`,
+      hello: (n) => `Salut ${n} ! 🎅`,
+      check: (n) => `Ce lien est uniquement pour ${n}. Si ce n'est pas toi, ferme-le sans regarder.`,
+      revealBtn: "Découvrir à qui j'offre un cadeau",
+      youAre: "Tu es le Père Noël secret de…",
+      keepSecret: "🤫 Garde le secret !",
+      revealFine: "Tu peux rouvrir ce lien à tout moment. Merci de ne le transférer à personne.",
+      brokenTitle: "Ce lien ne fonctionne pas",
+      brokenLede: "Il a peut-être été coupé lors du copier-coller. Demande à l'organisateur de te le renvoyer.",
+    },
+  };
+
+  let uiLang = DEFAULT_LANG;
+  const tr = (lang, key, ...args) => {
+    const v = (I18N[lang] && I18N[lang][key]) ?? I18N.en[key];
+    return typeof v === "function" ? v(...args) : v;
+  };
+  const t = (key, ...args) => tr(uiLang, key, ...args);
+
+  const onLangChange = []; // re-render hooks for dynamic content
+  function setLang(lang, { remember } = {}) {
+    uiLang = LANGS.includes(lang) ? lang : DEFAULT_LANG;
+    document.documentElement.lang = uiLang;
+    document.querySelectorAll("[data-i18n]").forEach((el) => { el.textContent = t(el.dataset.i18n); });
+    document.querySelectorAll("[data-i18n-html]").forEach((el) => { el.innerHTML = t(el.dataset.i18nHtml); });
+    document.querySelectorAll("[data-i18n-ph]").forEach((el) => { el.placeholder = t(el.dataset.i18nPh); });
+    document.querySelectorAll(".lang-switch button").forEach((b) => {
+      b.setAttribute("aria-pressed", String(b.dataset.lang === uiLang));
+    });
+    if (remember) { try { localStorage.setItem("santa-lang", uiLang); } catch (_) { /* ignore */ } }
+    onLangChange.forEach((fn) => fn());
+  }
+  function storedLang() {
+    try { return localStorage.getItem("santa-lang"); } catch (_) { return null; }
+  }
 
   /* ------------------------------------------------------------------ *
    * Base64url helpers
@@ -354,16 +565,26 @@
   }
 
   /* ------------------------------------------------------------------ *
-   * Parsing: one line = one household/couple
+   * Parsing: one line = one household/couple.
+   * A name may end with a language tag: "Anna (EN)" or "Anna [fr]".
    * ------------------------------------------------------------------ */
+  const LANG_TAG = /^(.*?)\s*[([]\s*([A-Za-z]{2})\s*[)\]]$/;
+
   function parsePeople(text) {
     const groups = text
       .split(/\r?\n/)
-      .map((line) => line.split(/\s*(?:&|,|\+|\/|;)\s*/).map((n) => n.trim().replace(/\s+/g, " ")).filter(Boolean))
+      .map((line) => line.split(/\s*(?:&|,|\+|\/|;)\s*/)
+        .map((raw) => raw.trim().replace(/\s+/g, " "))
+        .filter(Boolean)
+        .map((raw) => {
+          const m = raw.match(LANG_TAG);
+          if (m && m[1]) return { name: m[1], lang: m[2].toLowerCase(), tag: m[2] };
+          return { name: raw, lang: DEFAULT_LANG };
+        }))
       .filter((g) => g.length);
     const people = [];
     const groupOf = [];
-    groups.forEach((g, gi) => g.forEach((name) => { people.push(name); groupOf.push(gi); }));
+    groups.forEach((g, gi) => g.forEach((p) => { people.push(p); groupOf.push(gi); }));
     return { groups, people, groupOf };
   }
 
@@ -396,7 +617,7 @@
   /* ------------------------------------------------------------------ *
    * Organizer UI
    * ------------------------------------------------------------------ */
-  const defaultTitle = `Family Secret Santa ${new Date().getFullYear()}`;
+  const YEAR = new Date().getFullYear();
 
   function renderChips() {
     const { groups } = parsePeople($("people").value);
@@ -405,36 +626,50 @@
     groups.forEach((g) => {
       const c = document.createElement("span");
       c.className = "chip";
-      g.forEach((name, i) => {
+      g.forEach((p, i) => {
         if (i) {
           const h = document.createElement("span");
           h.className = "heart"; h.textContent = "♥";
           c.append(h);
         }
-        c.append(document.createTextNode(name));
+        c.append(document.createTextNode(p.name));
+        if (p.lang !== DEFAULT_LANG) {
+          const b = document.createElement("span");
+          b.className = "badge";
+          b.textContent = p.lang.toUpperCase();
+          c.append(b);
+        }
       });
       chips.append(c);
     });
   }
 
-  function setupError(msg) { $("setupError").textContent = msg; }
+  let lastError = null; // [key, ...args] so it can be re-translated
+  function setupError(key, ...args) {
+    lastError = key ? [key, ...args] : null;
+    $("setupError").textContent = key ? t(key, ...args) : "";
+  }
 
   async function onDraw(e) {
     e.preventDefault();
-    setupError("");
+    setupError(null);
     const { people, groupOf } = parsePeople($("people").value);
 
-    if (people.length < 3) return setupError("You need at least 3 people.");
-    const lower = people.map((p) => p.toLowerCase());
-    const dup = lower.find((p, i) => lower.indexOf(p) !== i);
-    if (dup) return setupError(`"${people[lower.indexOf(dup)]}" appears twice. Add a surname or initial so every name is different.`);
-    if (people.some((p) => p.length > 60)) return setupError("One of the names is very long. Did a line break go missing?");
+    if (people.length < 3) return setupError("errMin");
+    const badLang = people.find((p) => !LANGS.includes(p.lang));
+    if (badLang) return setupError("errLang", badLang.tag, badLang.name);
+    const lower = people.map((p) => p.name.toLowerCase());
+    const dupAt = lower.findIndex((p, i) => lower.indexOf(p) !== i);
+    if (dupAt !== -1) return setupError("errDup", people[dupAt].name);
+    if (people.some((p) => p.name.length > 60)) return setupError("errLong");
 
     const perm = drawNames(groupOf);
-    if (!perm) return setupError("There's no valid draw: one line has more than half of all the people. Add more people or split that line.");
+    if (!perm) return setupError("errImpossible");
 
+    const title = $("eventName").value.trim();
     const extras = {
-      t: $("eventName").value.trim() || defaultTitle,
+      t: title,
+      y: title ? "" : YEAR,
       b: $("budget").value.trim(),
       d: $("when").value.trim(),
       m: $("note").value.trim(),
@@ -442,38 +677,61 @@
     const base = location.href.split("#")[0];
     const links = [];
     for (let i = 0; i < people.length; i++) {
-      const payload = { g: people[i], r: people[perm[i]], ...extras };
+      const payload = { g: people[i].name, r: people[perm[i]].name, l: people[i].lang, ...extras };
       Object.keys(payload).forEach((k) => payload[k] === "" && delete payload[k]);
-      links.push({ name: people[i], url: `${base}#${await seal(payload)}` });
+      links.push({ name: people[i].name, lang: people[i].lang, url: `${base}#${await seal(payload)}`, status: "" });
     }
     // `perm` and the names it points to only ever existed in local variables. From here on, all we keep is the opaque links.
-    showLinks(links, extras.t);
+    showLinks(links, title);
   }
 
+  let current = null; // { links, title } for re-rendering on language change
+
   function showLinks(links, title) {
+    current = { links, title };
     $("setup").hidden = true;
     $("links").hidden = false;
-    $("linksTitle").textContent = title;
-    $("linksSub").textContent = `${links.length} people. Tap "Copy" or "Share" next to each name and send that link to that person only.`;
+    renderLinks();
+    window.addEventListener("beforeunload", guard);
+    window.scrollTo(0, 0);
+  }
+
+  function renderLinks() {
+    if (!current) return;
+    const { links, title } = current;
+    $("linksTitle").textContent = title || t("defaultTitle", YEAR);
+    $("linksSub").textContent = t("linksSub", links.length);
     const list = $("peopleList");
     list.replaceChildren();
     const canShare = typeof navigator.share === "function";
 
-    links.forEach(({ name, url }) => {
+    links.forEach((link) => {
+      const { name, lang, url } = link;
       const li = document.createElement("li");
       const who = document.createElement("span");
       who.className = "person";
       who.textContent = name;
+      if (lang !== DEFAULT_LANG) {
+        const b = document.createElement("span");
+        b.className = "badge";
+        b.textContent = lang.toUpperCase();
+        who.append(b);
+      }
       const sent = document.createElement("span");
       sent.className = "sent";
+      sent.textContent = link.status ? t(link.status) : "";
       who.append(sent);
 
       const copyBtn = document.createElement("button");
       copyBtn.type = "button";
       copyBtn.className = "secondary small";
-      copyBtn.textContent = "Copy link";
+      copyBtn.textContent = t("copyLink");
       copyBtn.addEventListener("click", async () => {
-        if (await copyText(url)) { sent.textContent = "✓ copied"; flash(`Copied ${name}'s link. Paste it in a private message to ${name}.`); }
+        if (await copyText(url)) {
+          link.status = "copied";
+          sent.textContent = t("copied");
+          flash("copiedFlash", name);
+        }
       });
       li.append(who, copyBtn);
 
@@ -481,31 +739,39 @@
         const shareBtn = document.createElement("button");
         shareBtn.type = "button";
         shareBtn.className = "secondary small";
-        shareBtn.textContent = "Share…";
+        shareBtn.textContent = t("share");
         shareBtn.addEventListener("click", async () => {
           try {
-            await navigator.share({ title, text: `Hi ${name}! 🎅 Here's your private Secret Santa link. Open it to see who you're buying for:`, url });
-            sent.textContent = "✓ shared";
+            // The message is in the recipient's language, not the organizer's.
+            await navigator.share({
+              title: title || tr(lang, "defaultTitle", YEAR),
+              text: tr(lang, "shareText", name),
+              url,
+            });
+            link.status = "shared";
+            sent.textContent = t("shared");
           } catch (_) { /* cancelled */ }
         });
         li.append(shareBtn);
       }
       list.append(li);
     });
+  }
 
-    $("copyAll").onclick = async () => {
-      const text = links.map((l) => `${l.name}: ${l.url}`).join("\n\n");
-      if (await copyText(text)) flash("Copied every name with its link. Send each person only their own line.");
-    };
-    $("startOver").onclick = () => {
-      if (confirm("Start over and draw again?\n\nIf you've already sent some links, tell everyone to ignore them. Old links keep showing the old draw.")) {
+  function initLinksButtons() {
+    $("copyAll").addEventListener("click", async () => {
+      if (!current) return;
+      const text = current.links.map((l) => `${l.name}: ${l.url}`).join("\n\n");
+      if (await copyText(text)) flash("copyAllFlash");
+    });
+    $("startOver").addEventListener("click", () => {
+      if (confirm(t("confirmStartOver"))) {
+        current = null;
         $("links").hidden = true;
         $("setup").hidden = false;
         window.removeEventListener("beforeunload", guard);
       }
-    };
-    window.addEventListener("beforeunload", guard);
-    window.scrollTo(0, 0);
+    });
   }
   function guard(e) { e.preventDefault(); e.returnValue = ""; }
 
@@ -517,47 +783,60 @@
       document.body.append(ta); ta.select();
       const ok = document.execCommand("copy");
       ta.remove();
-      if (!ok) prompt("Copy this:", text);
+      if (!ok) prompt(t("copyPrompt"), text);
       return true;
     }
   }
   let flashTimer;
-  function flash(msg) {
-    $("copyStatus").textContent = msg;
+  let lastFlash = null;
+  function flash(key, ...args) {
+    lastFlash = [key, ...args];
+    $("copyStatus").textContent = t(key, ...args);
     clearTimeout(flashTimer);
-    flashTimer = setTimeout(() => { $("copyStatus").textContent = ""; }, 6000);
+    flashTimer = setTimeout(() => { lastFlash = null; $("copyStatus").textContent = ""; }, 6000);
   }
 
   /* ------------------------------------------------------------------ *
    * Participant UI
    * ------------------------------------------------------------------ */
+  let revealData = null;
+
+  function renderReveal() {
+    if (!revealData) return;
+    const data = revealData;
+    const title = data.t || t("defaultTitle", data.y || YEAR);
+    document.title = title;
+    $("revealEvent").textContent = title;
+    $("revealHello").textContent = t("hello", data.g);
+    $("revealCheck").textContent = t("check", data.g);
+    $("recipient").textContent = data.r;
+    const det = $("details");
+    det.replaceChildren();
+    [["budget", data.b], ["when", data.d], ["note", data.m]].forEach(([k, v]) => {
+      if (!v) return;
+      const d = document.createElement("div");
+      const b = document.createElement("b");
+      b.textContent = t(k);
+      d.append(b, document.createTextNode(v));
+      det.append(d);
+    });
+  }
+
   async function showReveal(token) {
     let data;
     try { data = await unseal(token); }
     catch (_) { $("broken").hidden = false; return; }
 
-    document.title = data.t || "Secret Santa";
-    $("revealEvent").textContent = data.t || "Secret Santa";
-    $("revealHello").textContent = `Hi ${data.g}! 🎅`;
-    $("revealCheck").textContent = `This link is just for ${data.g}. If you're not ${data.g}, please close it without peeking.`;
+    revealData = data;
+    // The person's language comes from their link (chosen by the organizer).
+    // They can still switch with the PL/EN/FR buttons; that isn't remembered.
+    setLang(data.l || DEFAULT_LANG);
     $("reveal").hidden = false;
 
     $("revealBtn").addEventListener("click", () => {
-      const gift = $("gift");
-      gift.classList.add("shake");
+      $("gift").classList.add("shake");
       const done = () => {
         $("revealIntro").hidden = true;
-        $("recipient").textContent = data.r;
-        const det = $("details");
-        det.replaceChildren();
-        [["Budget", data.b], ["Gift exchange", data.d], ["Note", data.m]].forEach(([k, v]) => {
-          if (!v) return;
-          const d = document.createElement("div");
-          const b = document.createElement("b");
-          b.textContent = k;
-          d.append(b, document.createTextNode(v));
-          det.append(d);
-        });
         $("revealResult").hidden = false;
       };
       if (matchMedia("(prefers-reduced-motion: reduce)").matches) done();
@@ -569,15 +848,31 @@
    * Router
    * ------------------------------------------------------------------ */
   const token = location.hash.slice(1);
-  if (token) {
-    $("revealHello").textContent = "";
+  const isReveal = Boolean(token);
+
+  onLangChange.push(() => {
+    if (isReveal) { renderReveal(); return; }
+    $("people").placeholder = t("peoplePh");
+    $("eventName").placeholder = t("defaultTitle", YEAR);
+    if (lastError) $("setupError").textContent = t(...lastError);
+    if (lastFlash) $("copyStatus").textContent = t(...lastFlash);
+    renderLinks();
+  });
+
+  document.querySelectorAll(".lang-switch button").forEach((b) => {
+    b.addEventListener("click", () => setLang(b.dataset.lang, { remember: !isReveal }));
+  });
+
+  if (isReveal) {
+    setLang(DEFAULT_LANG); // until the link is decoded
     showReveal(token);
   } else {
+    setLang(storedLang() || DEFAULT_LANG);
     $("setup").hidden = false;
-    $("eventName").placeholder = defaultTitle;
     if (location.protocol === "file:") $("fileWarning").hidden = false;
     $("people").addEventListener("input", renderChips);
     $("setupForm").addEventListener("submit", onDraw);
+    initLinksButtons();
     renderChips();
   }
   window.addEventListener("hashchange", () => location.reload());

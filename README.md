@@ -6,15 +6,17 @@ A single-page Secret Santa draw where **nobody ever sees the pairings**, not eve
 - Nobody draws themselves.
 - Each person gets a private link that shows only *their* draw.
 - No server, no accounts, no database. The whole app is one `index.html`.
+- 🇵🇱 Polish by default, plus English and French: per person and for the organizer screen.
 
 ## How it works
 
 1. The organizer opens the site and types in the family, **one line per couple/household**:
 
    ```
-   Anna & Tom
+   Anna (EN) & Tom
    Kasia, Piotr
-   Grandma Ela
+   Babcia Ela
+   Marek (FR) & Basia
    Ola
    ```
 
@@ -26,6 +28,27 @@ A single-page Secret Santa draw where **nobody ever sees the pairings**, not eve
 3. The organizer sends each person their own link, by WhatsApp, SMS, email or whatever the family uses.
 
 4. A person opens their link, sees "Hi Anna! 🎅", taps **Reveal**, and sees who they're buying for.
+
+### Languages
+
+- Everyone gets their page in **Polish** unless you add a tag after their name: `(EN)` or `(FR)`.
+  `[EN]` and lowercase also work, and `(PL)` is allowed but not needed. In the example above, Anna gets English, Marek
+  gets French, and everyone else gets Polish.
+- The person's language is saved inside their link. Their page, the default title and the
+  **Share…** message are all in that language. A **PL / EN / FR** switch at the top still lets them change it.
+- The organizer screen also has the switch. It starts in Polish and remembers the choice in that browser.
+- Budget, date and note are shown exactly as typed, untranslated. If you leave the title empty, everyone sees a
+  default title in their own language.
+
+### What's inside a link
+
+Everything that person's page shows is in their link, and nothing is stored anywhere else:
+their name, their recipient's name, their language, and the title, budget, date and note.
+
+It is **encrypted** (AES-GCM) with a random key that is unique to that link. **The key is part of the same link**, so the
+encryption hides the content from a glance at the URL and makes a damaged or edited link fail instead of showing a wrong
+name. It does **not** stop someone who has the full link and opens it, or who decodes it on purpose.
+In other words, a link is exactly as private as the chat you send it through.
 
 ### Why nobody can see the pairings
 
