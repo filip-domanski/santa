@@ -232,7 +232,7 @@
       <label for="sheetKey" data-i18n="sheetTitle"></label>
       <p class="hint" data-i18n="sheetNeedKey"></p>
       <div class="inline">
-        <input type="password" id="sheetKey" data-i18n-ph="sheetKeyPh" autocomplete="off" spellcheck="false">
+        <input type="text" id="sheetKey" data-i18n-ph="sheetKeyPh" autocomplete="off" spellcheck="false">
         <button type="submit" class="secondary" id="sheetConnectBtn" data-i18n="sheetConnect"></button>
       </div>
       <p id="sheetError" class="error" role="alert"></p>
@@ -1004,7 +1004,10 @@
   function initSheetBox() {
     $("sheetForm").addEventListener("submit", async (e) => {
       e.preventDefault();
-      const key = $("sheetKey").value.trim();
+      // Accept the whole log line ("Secret Santa admin key: 3f9a…") or just the key.
+      const raw = $("sheetKey").value;
+      const hex = raw.match(/[0-9a-f]{64}/i);
+      const key = (hex ? hex[0] : raw).trim();
       if (!key) return;
       sheetErr = null;
       $("sheetConnectBtn").disabled = true;
