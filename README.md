@@ -56,7 +56,7 @@ In other words, a link is exactly as private as the chat you send it through.
   encrypted `{giver, recipient}` record.
 - That record sits in the URL **fragment** (the part after `#`). Browsers never send the fragment to the web server,
   so the host never sees anything either.
-- Nothing is saved to disk, cookies or local storage. When the organizer closes the page, the only copies of the draw
+- The draw is never saved to disk, cookies or browser storage (only the organizer's language choice is). When the organizer closes the page, the only copies of the draw
   are the links in each person's messages.
 
 **One honest caveat:** whoever sends the links *could* open one and see that person's draw. Nothing stops this without
