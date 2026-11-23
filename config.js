@@ -7,5 +7,5 @@
 // Leave it empty to run without a backend: each link then carries its whole
 // encrypted draw and nothing is stored anywhere.
 window.SANTA_CONFIG = {
-  sheetApiUrl: "",
+  sheetApiUrl: "https://script.google.com/macros/s/AKfycbyb2DkU7ujqT9ulzaNL6qDWBeg4_2gFEXagBNW7A9v6sItLjICZHnOxNPlzIUKuw_Ha/exec",
 };
