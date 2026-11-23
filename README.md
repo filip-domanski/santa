@@ -9,6 +9,8 @@ A single-page Secret Santa draw where **nobody ever sees the pairings**, not eve
 - 🇵🇱 Polish by default, plus English and French: per person and for the organizer screen.
 - Optional **Google Sheet backend**: re-send lost links, see how many times each link was opened, and make old links stop working after a redraw.
 
+> **Setting it up?** Follow the step-by-step checklist in [SETUP.md](SETUP.md).
+
 ## How it works
 
 1. The organizer opens the site and types in the family, **one line per couple/household**:
