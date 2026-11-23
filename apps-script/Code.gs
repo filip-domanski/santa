@@ -38,13 +38,22 @@ function onOpen() {
     .addToUi();
 }
 
+// Works from the Sheet's menu (shows a dialog) and from the Apps Script
+// editor's ▶ Run button (the key is printed in the Execution log). Use the
+// Run button on a phone, where the Sheet's custom menu isn't available.
 function showAdminKey() {
-  const ui = SpreadsheetApp.getUi();
-  ui.alert(
-    'Secret Santa admin key',
-    'Paste this into the Secret Santa website, on your own device only:\n\n' + adminKey_(),
-    ui.ButtonSet.OK
-  );
+  const key = adminKey_();
+  console.log('Secret Santa admin key: ' + key);
+  try {
+    const ui = SpreadsheetApp.getUi();
+    ui.alert(
+      'Secret Santa admin key',
+      'Paste this into the Secret Santa website, on your own device only:\n\n' + key,
+      ui.ButtonSet.OK
+    );
+  } catch (err) {
+    // Run from the editor: no dialog available, see the Execution log.
+  }
 }
 
 function resetAdminKey() {

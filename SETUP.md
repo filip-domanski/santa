@@ -38,7 +38,30 @@ personal details.
   - send it to Claude, who will update `config.js`, **or**
   - on GitHub open `config.js` on branch `main` → ✏️ → paste it between the quotes of `sheetApiUrl: ""` → **Commit changes**
 - [ ] Go back to the Sheet and **reload** the page. Open **🎅 Secret Santa → Show admin key**; the first time it asks for permission
-      again. Copy the key.
+      again. Copy the key. Alternatively, in the Apps Script editor choose `showAdminKey` → **▶ Run**, and the key appears in the Execution log.
+
+### 📱 Doing part 2 on a phone
+
+The **Google Sheets app can't do this**: it has no Apps Script editor, and custom menus don't appear in it.
+Use your phone's **browser in desktop mode** instead. A computer is easier if one is handy, and you only need it once.
+After setup, everything else works fine on the phone.
+
+- [ ] In Chrome (Android): **⋮ → ☑ Desktop site**. In Safari (iPhone): **aA → Request Desktop Website**.
+      Do this on each new page if it switches back to the mobile version.
+- [ ] Go to **sheets.new** in that browser, which creates the Sheet, and rename it *Secret Santa (private)*.
+      If it opens the Sheets app instead, go to **docs.google.com/spreadsheets** in the browser and tap **+**.
+- [ ] Turn your phone sideways (landscape) and zoom out. Then **Extensions → Apps Script**, which opens a new tab.
+- [ ] Select all the sample code, delete it, paste `Code.gs`, and tap 💾 **Save**.
+      To copy `Code.gs` on the phone: open it on GitHub, tap **Raw**, then *Select all → Copy*.
+- [ ] Choose **`showAdminKey`** in the function dropdown at the top and tap **▶ Run**. The first time, it asks for permission:
+      **Review permissions → your account → Advanced → Go to … (unsafe) → Allow**.
+      The **Execution log** at the bottom then shows `Secret Santa admin key: …`. Copy it and keep it for part 3.
+- [ ] **Deploy → New deployment → ⚙️ → Web app**, then *Execute as:* **Me**, *Who has access:* **Anyone** → **Deploy** → copy the
+      **Web app URL** (`…/exec`) and send it to Claude.
+
+Later, to re-send a lost link from the **Sheets app**: in the **Draw** tab, tap the person's *Link* cell **once** to select it,
+then tap it again for the menu and choose **Copy**. Don't tap the link preview that pops up, because that opens the link,
+which shows you their draw and counts as an opening.
 
 ## 3. Connect and test (about 5 min)
 
