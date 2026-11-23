@@ -7,6 +7,7 @@ A single-page Secret Santa draw where **nobody ever sees the pairings**, not eve
 - Each person gets a private link that shows only *their* draw.
 - No server, no accounts, no database. The whole app is one `index.html`.
 - 🇵🇱 Polish by default, plus English and French: per person and for the organizer screen.
+- Optional **Google Sheet backend**: re-send lost links, see how many times each link was opened, and make old links stop working after a redraw.
 
 ## How it works
 
@@ -56,12 +57,60 @@ In other words, a link is exactly as private as the chat you send it through.
   encrypted `{giver, recipient}` record.
 - That record sits in the URL **fragment** (the part after `#`). Browsers never send the fragment to the web server,
   so the host never sees anything either.
-- The draw is never saved to disk, cookies or browser storage (only the organizer's language choice is). When the organizer closes the page, the only copies of the draw
-  are the links in each person's messages.
+- Without the Google Sheet backend, the draw is never saved to disk, cookies or browser storage (only the organizer's
+  language choice is). When the organizer closes the page, the only copies of the draw are the links in each person's
+  messages. With the backend, see "Google Sheet backend" below.
 
 **One honest caveat:** whoever sends the links *could* open one and see that person's draw. Nothing stops this without
 a server and accounts. The page warns the organizer not to, and the organizer is in exactly the same position as
 everyone else, so they can take part in the draw too.
+
+## Google Sheet backend (optional)
+
+Without it, everything above still works. With it:
+
+- The draw is saved **encrypted** in a private Google Sheet that only you can see.
+- **Lost link?** Copy it again from the Sheet's *Link* column and re-send it.
+- **Times opened / First opened / Last opened** are recorded for each link. The person also sees it on their page:
+  "This link has already been opened 2 times, first on 3 Dec, 18:02". If anyone peeks, the owner finds out.
+- **Drawing again** replaces the old rows, so old links show "this link is no longer valid" instead of an outdated draw.
+- Links are shorter: they hold only a row ID and that row's key.
+
+### What the Sheet contains, and who can read what
+
+| Column | Contains | Readable? |
+|---|---|---|
+| Name, Language | The giver's name and language | Yes |
+| **Link** | The full link, including the key for that row | **Opening it reveals that person's draw**, and that opening is counted |
+| Times opened, First/Last opened | The open counter | Yes |
+| id, encrypted draw | The AES-GCM-encrypted draw | No. The key isn't stored in any column, only inside the link. |
+
+So anyone looking at the Sheet sees who takes part, but not who drew whom. The only way to see a draw is to open
+that person's link, and the person will see that it happened. Keep the Sheet private (don't share it), since the
+*Link* column is what makes re-sending possible. Note that whoever owns the Sheet could also edit the counter columns,
+so the counter discourages peeking and catches accidental opens, but it isn't proof.
+
+### Setup (about 10 minutes, once)
+
+1. **Create a Google Sheet** in your own Google account, for example "Secret Santa". Don't share it.
+2. In the Sheet: **Extensions → Apps Script**. Delete what's there, paste the contents of
+   [`apps-script/Code.gs`](apps-script/Code.gs), and click 💾 **Save**.
+3. **Deploy → New deployment →** ⚙️ **Web app**:
+   - *Execute as:* **Me**
+   - *Who has access:* **Anyone**. This is required so family members can open their links without signing in.
+     It's safe: rows can only be fetched by their random ID, and saving a draw needs your admin key.
+   - Click **Deploy**, then allow the permissions. Google warns "Google hasn't verified this app" because it's your
+     own script: click **Advanced → Go to … (unsafe)**.
+   - Copy the **Web app URL** (`https://script.google.com/macros/s/…/exec`).
+4. Paste that URL into [`config.js`](config.js) as `sheetApiUrl`, and commit. On GitHub you can do this with the ✏️
+   button on the file.
+5. Reload the Sheet. A **🎅 Secret Santa** menu appears. Click **Show admin key** and copy the key.
+6. Open the website. It now shows **Your Google Sheet**: paste the admin key and click **Connect**. The key is
+   remembered in that browser only.
+7. Draw as usual. A **Draw** tab appears in your Sheet.
+
+If you later change `Code.gs`, use **Deploy → Manage deployments → ✏️ → Version: New version** so the URL stays the
+same. If you think your admin key has leaked, use **🎅 Secret Santa → Make a new admin key**.
 
 ## Hosting it (GitHub Pages, free, about 2 minutes)
 

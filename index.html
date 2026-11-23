@@ -88,7 +88,7 @@
 
   label { display: block; font-weight: 600; margin-bottom: 6px; }
   .hint { color: var(--muted); font-size: 14px; margin-bottom: 8px; font-weight: 400; }
-  textarea, input[type="text"] {
+  textarea, input[type="text"], input[type="password"] {
     width: 100%;
     font: inherit;
     color: var(--ink);
@@ -190,6 +190,17 @@
     border: 1px solid var(--line); color: var(--muted); border-radius: 6px;
     padding: 0 5px; margin-left: 6px; vertical-align: 1px;
   }
+
+  /* Google Sheet connection */
+  .inline { display: flex; gap: 8px; }
+  .inline input { flex: 1; min-width: 0; }
+  .sheet-ok { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+  .linkish {
+    background: none; border: 0; padding: 0; font-size: 14px; font-weight: 500;
+    color: var(--green); text-decoration: underline; cursor: pointer;
+  }
+  .opened { margin-top: 12px; }
+  button:disabled { opacity: .6; cursor: progress; }
 </style>
 </head>
 <body>
@@ -208,10 +219,24 @@
     <header>
       <div class="eyebrow" data-i18n="setupEyebrow"></div>
       <h1 data-i18n="setupTitle"></h1>
-      <p class="lede" data-i18n="setupLede"></p>
+      <p class="lede" id="setupLede" data-i18n="setupLede"></p>
     </header>
 
     <div id="fileWarning" class="notice" data-i18n="fileWarning" hidden></div>
+
+    <div id="sheetOk" class="ok sheet-ok" hidden>
+      <span data-i18n="sheetConnected"></span>
+      <button type="button" class="linkish" id="sheetDisconnect" data-i18n="sheetDisconnect"></button>
+    </div>
+    <form id="sheetForm" class="card" novalidate hidden>
+      <label for="sheetKey" data-i18n="sheetTitle"></label>
+      <p class="hint" data-i18n="sheetNeedKey"></p>
+      <div class="inline">
+        <input type="password" id="sheetKey" data-i18n-ph="sheetKeyPh" autocomplete="off" spellcheck="false">
+        <button type="submit" class="secondary" id="sheetConnectBtn" data-i18n="sheetConnect"></button>
+      </div>
+      <p id="sheetError" class="error" role="alert"></p>
+    </form>
 
     <form id="setupForm" class="card" novalidate>
       <div class="field">
@@ -248,7 +273,7 @@
       </div>
 
       <div class="field">
-        <button type="submit" class="primary" data-i18n="drawBtn"></button>
+        <button type="submit" class="primary" id="drawBtn" data-i18n="drawBtn"></button>
         <p id="setupError" class="error" role="alert"></p>
       </div>
     </form>
@@ -262,7 +287,7 @@
       <p class="lede" data-i18n="linksLede"></p>
     </header>
 
-    <div class="notice" data-i18n-html="linksNotice"></div>
+    <div class="notice" id="linksNotice" data-i18n-html="linksNotice"></div>
 
     <div class="card">
       <h2 id="linksTitle"></h2>
@@ -285,6 +310,7 @@
         <div class="gift" id="gift" aria-hidden="true">🎁</div>
         <h1 id="revealHello"></h1>
         <p class="lede" id="revealCheck"></p>
+        <p class="fine opened" id="openedBefore" hidden></p>
         <div style="margin-top:24px">
           <button type="button" class="primary" id="revealBtn" data-i18n="revealBtn"></button>
         </div>
@@ -300,23 +326,38 @@
     </div>
   </section>
 
-  <section id="broken" hidden>
+  <section id="loading" hidden>
     <div class="card reveal">
-      <div class="gift" aria-hidden="true">🧦</div>
-      <h1 data-i18n="brokenTitle"></h1>
-      <p class="lede" data-i18n="brokenLede"></p>
+      <div class="gift shake" aria-hidden="true">✉️</div>
+      <p class="lede" data-i18n="loading"></p>
     </div>
   </section>
 
-  <footer data-i18n="footer"></footer>
+  <section id="problem" hidden>
+    <div class="card reveal">
+      <div class="gift" aria-hidden="true">🧦</div>
+      <h1 id="problemTitle"></h1>
+      <p class="lede" id="problemLede"></p>
+      <div id="retryWrap" style="margin-top:24px" hidden>
+        <button type="button" class="primary" id="retryBtn" data-i18n="retry"></button>
+      </div>
+    </div>
+  </section>
+
+  <footer id="footer" data-i18n="footer"></footer>
 </main>
 
+<script src="config.js"></script>
 <script>
 (() => {
   "use strict";
 
   const $ = (id) => document.getElementById(id);
   const VERSION = "1";
+
+  // Optional Google Sheet backend (see config.js / README).
+  const API = String((window.SANTA_CONFIG && window.SANTA_CONFIG.sheetApiUrl) || "").trim();
+  const SHEET_MODE = Boolean(API);
 
   /* ------------------------------------------------------------------ *
    * Translations
@@ -376,6 +417,29 @@
       revealFine: "Możesz otworzyć ten link ponownie w dowolnym momencie. Nie przekazuj go nikomu.",
       brokenTitle: "Ten link nie działa",
       brokenLede: "Mógł zostać ucięty podczas kopiowania. Poproś organizatora o ponowne wysłanie.",
+      goneTitle: "Ten link jest już nieaktualny",
+      goneLede: "Losowanie zostało powtórzone. Poproś organizatora o nowy link.",
+      netTitle: "Nie udało się wczytać losowania",
+      netLede: "Sprawdź połączenie z internetem i spróbuj ponownie.",
+      retry: "Spróbuj ponownie",
+      loading: "Otwieram kopertę…",
+      openedBefore: (n, when) => `Ten link był już otwierany: ${n}×${when ? `, pierwszy raz ${when}` : ""}.`,
+      // Google Sheet (organizer)
+      setupLedeSheet: "Każdy dostanie własny, prywatny link. Wynik losowania nie jest nigdzie wyświetlany. Zostanie zaszyfrowany i zapisany w Twoim Arkuszu Google razem z linkami, żeby można było ponownie wysłać zgubiony.",
+      footerSheet: "Bez kont. Losowanie jest zapisane w zaszyfrowanej formie w Arkuszu Google organizatora, a każdy link otwiera tylko swój wiersz.",
+      sheetTitle: "Twój Arkusz Google",
+      sheetNeedKey: "Wklej klucz administratora z Arkusza (menu 🎅 Secret Santa → Show admin key). Zostanie zapamiętany tylko w tej przeglądarce.",
+      sheetKeyPh: "Klucz administratora",
+      sheetConnect: "Połącz",
+      sheetConnected: "✓ Połączono z Twoim Arkuszem Google. Losowanie i linki zostaną tam zapisane.",
+      sheetDisconnect: "Rozłącz",
+      sheetBadKey: "Ten klucz nie zadziałał. Skopiuj go ponownie z Arkusza.",
+      sheetOffline: "Nie udało się połączyć z Arkuszem Google. Sprawdź adres w config.js i czy aplikacja jest wdrożona z dostępem „Każdy”.",
+      errNeedSheet: "Najpierw połącz Arkusz Google (powyżej).",
+      errSave: "Nie udało się zapisać losowania w Arkuszu Google, więc nie utworzono linków. Spróbuj ponownie.",
+      saving: "Zapisywanie…",
+      linksNoticeSheet: "<b>Nie otwieraj tych linków samodzielnie.</b> Każde otwarcie jest liczone w Arkuszu, a właściciel linku zobaczy, ile razy i kiedy był otwierany. Wszystkie linki są też zapisane w Twoim Arkuszu, więc możesz ponownie wysłać zgubiony. Linki z wcześniejszych losowań już nie działają.",
+      confirmStartOverSheet: "Zacząć od nowa?\n\nNowe losowanie zastąpi obecne w Arkuszu, a wszystkie wysłane już linki przestaną działać.",
     },
 
     en: {
@@ -428,6 +492,28 @@
       revealFine: "You can open this link again any time. Please don't forward it to anyone.",
       brokenTitle: "This link doesn't work",
       brokenLede: "It may have been cut off when it was copied. Ask the organizer to send it again.",
+      goneTitle: "This link is no longer valid",
+      goneLede: "The names were drawn again. Ask the organizer for your new link.",
+      netTitle: "Couldn't load your draw",
+      netLede: "Check your internet connection and try again.",
+      retry: "Try again",
+      loading: "Opening your envelope…",
+      openedBefore: (n, when) => `This link has already been opened ${n} ${n === 1 ? "time" : "times"}${when ? `, first on ${when}` : ""}.`,
+      setupLedeSheet: "Everyone gets their own private link. The draw is never shown on screen. It's saved encrypted in your Google Sheet, together with the links, so you can re-send one if it gets lost.",
+      footerSheet: "No accounts. The draw is stored encrypted in the organizer's Google Sheet, and each link unlocks only its own row.",
+      sheetTitle: "Your Google Sheet",
+      sheetNeedKey: "Paste the admin key from your Sheet (menu 🎅 Secret Santa → Show admin key). It's remembered in this browser only.",
+      sheetKeyPh: "Admin key",
+      sheetConnect: "Connect",
+      sheetConnected: "✓ Connected to your Google Sheet. The draw and the links will be saved there.",
+      sheetDisconnect: "Disconnect",
+      sheetBadKey: "That key didn't work. Copy it again from the Sheet.",
+      sheetOffline: "Couldn't reach your Google Sheet. Check the URL in config.js and that the web app is deployed for \"Anyone\".",
+      errNeedSheet: "Connect your Google Sheet first (above).",
+      errSave: "Couldn't save the draw to your Google Sheet, so no links were created. Try again.",
+      saving: "Saving…",
+      linksNoticeSheet: "<b>Don't open the links yourself.</b> Every opening is counted in the Sheet, and the link's owner will see how many times and when it was opened. All links are also saved in your Sheet, so you can re-send one if someone loses it. Links from earlier draws no longer work.",
+      confirmStartOverSheet: "Start over?\n\nThe new draw will replace the current one in your Sheet, and every link you've already sent will stop working.",
     },
 
     fr: {
@@ -480,6 +566,28 @@
       revealFine: "Tu peux rouvrir ce lien à tout moment. Merci de ne le transférer à personne.",
       brokenTitle: "Ce lien ne fonctionne pas",
       brokenLede: "Il a peut-être été coupé lors du copier-coller. Demande à l'organisateur de te le renvoyer.",
+      goneTitle: "Ce lien n'est plus valide",
+      goneLede: "Le tirage a été refait. Demande ton nouveau lien à l'organisateur.",
+      netTitle: "Impossible de charger ton tirage",
+      netLede: "Vérifie ta connexion internet et réessaie.",
+      retry: "Réessayer",
+      loading: "Ouverture de l'enveloppe…",
+      openedBefore: (n, when) => `Ce lien a déjà été ouvert ${n} fois${when ? `, la première fois le ${when}` : ""}.`,
+      setupLedeSheet: "Chacun reçoit son propre lien privé. Le tirage n'est jamais affiché. Il est enregistré chiffré dans votre Google Sheet, avec les liens, pour pouvoir en renvoyer un en cas de perte.",
+      footerSheet: "Pas de compte. Le tirage est enregistré chiffré dans le Google Sheet de l'organisateur, et chaque lien n'ouvre que sa propre ligne.",
+      sheetTitle: "Votre Google Sheet",
+      sheetNeedKey: "Collez la clé d'administration de votre Sheet (menu 🎅 Secret Santa → Show admin key). Elle n'est mémorisée que dans ce navigateur.",
+      sheetKeyPh: "Clé d'administration",
+      sheetConnect: "Connecter",
+      sheetConnected: "✓ Connecté à votre Google Sheet. Le tirage et les liens y seront enregistrés.",
+      sheetDisconnect: "Déconnecter",
+      sheetBadKey: "Cette clé ne fonctionne pas. Copiez-la à nouveau depuis le Sheet.",
+      sheetOffline: "Impossible de joindre votre Google Sheet. Vérifiez l'URL dans config.js et que l'application web est déployée pour « Tout le monde ».",
+      errNeedSheet: "Connectez d'abord votre Google Sheet (ci-dessus).",
+      errSave: "Impossible d'enregistrer le tirage dans votre Google Sheet, aucun lien n'a donc été créé. Réessayez.",
+      saving: "Enregistrement…",
+      linksNoticeSheet: "<b>N'ouvrez pas ces liens vous-même.</b> Chaque ouverture est comptée dans le Sheet, et le destinataire verra combien de fois et quand son lien a été ouvert. Tous les liens sont aussi enregistrés dans votre Sheet : vous pouvez en renvoyer un en cas de perte. Les liens des tirages précédents ne fonctionnent plus.",
+      confirmStartOverSheet: "Recommencer ?\n\nLe nouveau tirage remplacera l'actuel dans votre Sheet, et tous les liens déjà envoyés cesseront de fonctionner.",
     },
   };
 
@@ -545,6 +653,68 @@
     const key = await crypto.subtle.importKey("raw", raw.slice(0, 16), "AES-GCM", false, ["decrypt"]);
     const pt = await crypto.subtle.decrypt({ name: "AES-GCM", iv: raw.slice(16, 28) }, key, raw.slice(28));
     return JSON.parse(new TextDecoder().decode(pt));
+  }
+
+  /* ------------------------------------------------------------------ *
+   * Sheet-backed links ("2…"): the link holds only a row id and that
+   * row's key. The encrypted draw lives in the Sheet. The id is bound
+   * into the encryption, so rows can't be swapped around.
+   * ------------------------------------------------------------------ */
+  const toHex = (b) => Array.from(b, (x) => x.toString(16).padStart(2, "0")).join("");
+  function concat(...parts) {
+    const out = new Uint8Array(parts.reduce((n, p) => n + p.length, 0));
+    let o = 0;
+    for (const p of parts) { out.set(p, o); o += p.length; }
+    return out;
+  }
+  async function sealRow(obj) {
+    const idBytes = crypto.getRandomValues(new Uint8Array(16));
+    const keyBytes = crypto.getRandomValues(new Uint8Array(16));
+    const iv = crypto.getRandomValues(new Uint8Array(12));
+    const key = await crypto.subtle.importKey("raw", keyBytes, "AES-GCM", false, ["encrypt"]);
+    const pt = new TextEncoder().encode(JSON.stringify(obj));
+    const ct = new Uint8Array(await crypto.subtle.encrypt({ name: "AES-GCM", iv, additionalData: idBytes }, key, pt));
+    return {
+      id: "s" + toHex(idBytes),
+      data: "x" + toB64url(concat(iv, ct)),
+      token: "2" + toB64url(concat(idBytes, keyBytes)),
+    };
+  }
+  function parseSheetToken(token) {
+    const raw = fromB64url(token.slice(1));
+    if (raw.length !== 32) throw new Error("bad token");
+    const idBytes = raw.slice(0, 16);
+    return { id: "s" + toHex(idBytes), idBytes, keyBytes: raw.slice(16) };
+  }
+  async function openRow(data, keyBytes, idBytes) {
+    if (typeof data !== "string" || data[0] !== "x") throw new Error("bad data");
+    const raw = fromB64url(data.slice(1));
+    const key = await crypto.subtle.importKey("raw", keyBytes, "AES-GCM", false, ["decrypt"]);
+    const pt = await crypto.subtle.decrypt({ name: "AES-GCM", iv: raw.slice(0, 12), additionalData: idBytes }, key, raw.slice(12));
+    return JSON.parse(new TextDecoder().decode(pt));
+  }
+
+  // Apps Script web apps answer cross-origin GETs and text/plain POSTs.
+  async function apiGet(params) {
+    const u = new URL(API);
+    Object.entries(params).forEach(([k, v]) => u.searchParams.set(k, v));
+    const r = await fetch(u, { redirect: "follow", cache: "no-store" });
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    return r.json();
+  }
+  async function apiPost(body) {
+    const r = await fetch(API, { method: "POST", body: JSON.stringify(body), redirect: "follow" });
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    return r.json();
+  }
+
+  let memAdminKey = "";
+  function adminKey() {
+    try { return localStorage.getItem("santa-admin-key") || memAdminKey; } catch (_) { return memAdminKey; }
+  }
+  function setAdminKey(k) {
+    memAdminKey = k;
+    try { k ? localStorage.setItem("santa-admin-key", k) : localStorage.removeItem("santa-admin-key"); } catch (_) { /* ignore */ }
   }
 
   /* ------------------------------------------------------------------ *
@@ -655,6 +825,7 @@
     setupError(null);
     const { people, groupOf } = parsePeople($("people").value);
 
+    if (SHEET_MODE && !adminKey()) return setupError("errNeedSheet");
     if (people.length < 3) return setupError("errMin");
     const badLang = people.find((p) => !LANGS.includes(p.lang));
     if (badLang) return setupError("errLang", badLang.tag, badLang.name);
@@ -676,10 +847,33 @@
     };
     const base = location.href.split("#")[0];
     const links = [];
+    const rows = [];
     for (let i = 0; i < people.length; i++) {
       const payload = { g: people[i].name, r: people[perm[i]].name, l: people[i].lang, ...extras };
       Object.keys(payload).forEach((k) => payload[k] === "" && delete payload[k]);
-      links.push({ name: people[i].name, lang: people[i].lang, url: `${base}#${await seal(payload)}`, status: "" });
+      let url;
+      if (SHEET_MODE) {
+        const row = await sealRow(payload);
+        url = `${base}#${row.token}`;
+        rows.push({ id: row.id, name: people[i].name, lang: people[i].lang, link: url, data: row.data });
+      } else {
+        url = `${base}#${await seal(payload)}`;
+      }
+      links.push({ name: people[i].name, lang: people[i].lang, url, status: "" });
+    }
+
+    if (SHEET_MODE) {
+      const btn = $("drawBtn");
+      btn.disabled = true;
+      btn.textContent = t("saving");
+      let res = null;
+      try { res = await apiPost({ action: "saveDraw", key: adminKey(), rows }); } catch (_) { /* network */ }
+      btn.disabled = false;
+      btn.textContent = t("drawBtn");
+      if (!res || !res.ok) {
+        if (res && res.error === "bad_key") { setAdminKey(""); sheetErr = "sheetBadKey"; renderSheetBox(); }
+        return setupError("errSave");
+      }
     }
     // `perm` and the names it points to only ever existed in local variables. From here on, all we keep is the opaque links.
     showLinks(links, title);
@@ -692,7 +886,7 @@
     $("setup").hidden = true;
     $("links").hidden = false;
     renderLinks();
-    window.addEventListener("beforeunload", guard);
+    if (!SHEET_MODE) window.addEventListener("beforeunload", guard); // links are saved in the Sheet otherwise
     window.scrollTo(0, 0);
   }
 
@@ -765,7 +959,7 @@
       if (await copyText(text)) flash("copyAllFlash");
     });
     $("startOver").addEventListener("click", () => {
-      if (confirm(t("confirmStartOver"))) {
+      if (confirm(t(SHEET_MODE ? "confirmStartOverSheet" : "confirmStartOver"))) {
         current = null;
         $("links").hidden = true;
         $("setup").hidden = false;
@@ -797,9 +991,39 @@
   }
 
   /* ------------------------------------------------------------------ *
+   * Organizer: Google Sheet connection
+   * ------------------------------------------------------------------ */
+  let sheetErr = null;
+  function renderSheetBox() {
+    if (!SHEET_MODE) return;
+    const connected = Boolean(adminKey());
+    $("sheetOk").hidden = !connected;
+    $("sheetForm").hidden = connected;
+    $("sheetError").textContent = sheetErr ? t(sheetErr) : "";
+  }
+  function initSheetBox() {
+    $("sheetForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const key = $("sheetKey").value.trim();
+      if (!key) return;
+      sheetErr = null;
+      $("sheetConnectBtn").disabled = true;
+      let res = null;
+      try { res = await apiPost({ action: "ping", key }); } catch (_) { sheetErr = "sheetOffline"; }
+      $("sheetConnectBtn").disabled = false;
+      if (res && res.ok) { setAdminKey(key); $("sheetKey").value = ""; }
+      else if (res) sheetErr = "sheetBadKey";
+      renderSheetBox();
+    });
+    $("sheetDisconnect").addEventListener("click", () => { setAdminKey(""); renderSheetBox(); });
+    renderSheetBox();
+  }
+
+  /* ------------------------------------------------------------------ *
    * Participant UI
    * ------------------------------------------------------------------ */
   let revealData = null;
+  let problem = null; // "broken" | "gone" | "net"
 
   function renderReveal() {
     if (!revealData) return;
@@ -820,19 +1044,61 @@
       d.append(b, document.createTextNode(v));
       det.append(d);
     });
+    const opened = $("openedBefore");
+    if (data.opens > 0) {
+      let when = "";
+      try {
+        if (data.first) when = new Intl.DateTimeFormat(uiLang, { dateStyle: "medium", timeStyle: "short" }).format(new Date(data.first));
+      } catch (_) { /* ignore */ }
+      opened.textContent = t("openedBefore", data.opens, when);
+      opened.hidden = false;
+    } else {
+      opened.hidden = true;
+    }
   }
 
-  async function showReveal(token) {
+  function renderProblem() {
+    if (!problem) return;
+    $("problemTitle").textContent = t(problem + "Title");
+    $("problemLede").textContent = t(problem + "Lede");
+    $("retryWrap").hidden = problem !== "net";
+  }
+  function showProblem(kind) {
+    problem = kind;
+    $("loading").hidden = true;
+    $("problem").hidden = false;
+    renderProblem();
+  }
+
+  async function loadReveal(token) {
     let data;
-    try { data = await unseal(token); }
-    catch (_) { $("broken").hidden = false; return; }
+    if (token[0] === VERSION) {
+      // Self-contained link: the whole encrypted draw is in the link.
+      try { data = await unseal(token); } catch (_) { return showProblem("broken"); }
+    } else if (token[0] === "2" && SHEET_MODE) {
+      // Sheet-backed link: fetch this row's encrypted draw, unlock it here.
+      let parsed;
+      try { parsed = parseSheetToken(token); } catch (_) { return showProblem("broken"); }
+      $("loading").hidden = false;
+      let res;
+      try { res = await apiGet({ action: "open", id: parsed.id }); } catch (_) { return showProblem("net"); }
+      if (!res || !res.ok) return showProblem(res && res.error === "not_found" ? "gone" : "net");
+      try { data = await openRow(res.data, parsed.keyBytes, parsed.idBytes); } catch (_) { return showProblem("broken"); }
+      data.opens = Number(res.opens) || 0;
+      data.first = res.first || null;
+      $("loading").hidden = true;
+    } else {
+      return showProblem("broken");
+    }
 
     revealData = data;
     // The person's language comes from their link (chosen by the organizer).
     // They can still switch with the PL/EN/FR buttons; that isn't remembered.
     setLang(data.l || DEFAULT_LANG);
     $("reveal").hidden = false;
+  }
 
+  function initReveal(token) {
     $("revealBtn").addEventListener("click", () => {
       $("gift").classList.add("shake");
       const done = () => {
@@ -842,6 +1108,11 @@
       if (matchMedia("(prefers-reduced-motion: reduce)").matches) done();
       else setTimeout(done, 650);
     }, { once: true });
+    $("retryBtn").addEventListener("click", () => {
+      problem = null;
+      $("problem").hidden = true;
+      loadReveal(token);
+    });
   }
 
   /* ------------------------------------------------------------------ *
@@ -849,13 +1120,18 @@
    * ------------------------------------------------------------------ */
   const token = location.hash.slice(1);
   const isReveal = Boolean(token);
+  if (SHEET_MODE) {
+    $("footer").dataset.i18n = "footerSheet";
+    $("setupLede").dataset.i18n = "setupLedeSheet";
+  }
 
   onLangChange.push(() => {
-    if (isReveal) { renderReveal(); return; }
+    if (isReveal) { renderReveal(); renderProblem(); return; }
     $("people").placeholder = t("peoplePh");
     $("eventName").placeholder = t("defaultTitle", YEAR);
     if (lastError) $("setupError").textContent = t(...lastError);
     if (lastFlash) $("copyStatus").textContent = t(...lastFlash);
+    renderSheetBox();
     renderLinks();
   });
 
@@ -865,14 +1141,17 @@
 
   if (isReveal) {
     setLang(DEFAULT_LANG); // until the link is decoded
-    showReveal(token);
+    initReveal(token);
+    loadReveal(token);
   } else {
+    if (SHEET_MODE) $("linksNotice").dataset.i18nHtml = "linksNoticeSheet";
     setLang(storedLang() || DEFAULT_LANG);
     $("setup").hidden = false;
     if (location.protocol === "file:") $("fileWarning").hidden = false;
     $("people").addEventListener("input", renderChips);
     $("setupForm").addEventListener("submit", onDraw);
     initLinksButtons();
+    if (SHEET_MODE) initSheetBox();
     renderChips();
   }
   window.addEventListener("hashchange", () => location.reload());
